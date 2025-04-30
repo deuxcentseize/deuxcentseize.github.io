@@ -19,8 +19,19 @@
 
 <main>
   <h1>Curriculum Vitae</h1>
-  <p>Coming soon. When I figure out how to embed both a LaTeX page and a PDF overtop of each other in an eye-catching fashion.</p>
+
+  <!-- Responsive PDF embed -->
+  <object data="cv.pdf"
+          type="application/pdf"
+          width="100%"          <!-- fills the container -->
+          height="900px">       <!-- tweak to taste -->
+    <!-- Fallback for browsers that block inline PDFs -->
+    <p>Your browser can’t display PDF files.  
+       <a href="cv.pdf">Download my CV instead.</a>
+    </p>
+  </object>
 </main>
+
 
 <footer>© 2025 Jet Shand-Pease</footer>
 </body>
