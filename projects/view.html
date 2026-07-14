@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Project — Jet Shand-Pease</title>
+  <style>
+    :root { --navy:#1f3864; --line:#e3e8ef; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .bar {
+      height: 52px;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0 1rem;
+      background: var(--navy);
+      color: #fff;
+      border-bottom: 1px solid #142743;
+    }
+    .bar .back {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(255,255,255,0.14);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding: 0.45rem 0.9rem;
+      border-radius: 7px;
+      border: 1px solid rgba(255,255,255,0.25);
+      transition: background 0.15s;
+    }
+    .bar .back:hover { background: rgba(255,255,255,0.28); }
+    .bar .title { font-weight: 600; font-size: 1rem; opacity: 0.95; }
+    .bar .ext {
+      margin-left: auto;
+      color: #cfe0ff;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .bar .ext:hover { color: #fff; text-decoration: underline; }
+    #frame { width: 100%; height: calc(100% - 52px); border: 0; display: block; }
+    .missing { padding: 3rem 2rem; color: #333; }
+    .missing a { color: #0066cc; }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <a class="back" href="index.html">&larr; Back to projects</a>
+    <span class="title" id="ptitle">Project</span>
+    <a class="ext" id="pext" href="index.html" target="_blank" rel="noopener">Open in new window &#8599;</a>
+  </div>
+  <iframe id="frame" title="Project view" allow="fullscreen; autoplay"></iframe>
+
+  <script>
+    // Allowlisted projects only — the raw project HTML loads inside the frame,
+    // so visitors never land on the bare .html file.
+    var PROJECTS = {
+      pps:      { src: "../ClaudePPS/index.html",     title: "Primordial Particle System" },
+      atlas:    { src: "../atlas.html",               title: "All Media Consumption Tracker" },
+      stirling: { src: "../ClaudeStirling/index.html", title: "Stirling Numbers of the First Kind" },
+      borders:  { src: "../ClaudeBorders/index.html", title: "Borders: Europe Across Time" },
+      universe: { src: "../ClaudeUniverse/genesis.html", title: "Genesis: A Universe Over Time" }
+    };
+
+    var params = new URLSearchParams(window.location.search);
+    var key = params.get("p");
+    var proj = Object.prototype.hasOwnProperty.call(PROJECTS, key) ? PROJECTS[key] : null;
+
+    if (proj) {
+      document.title = proj.title + " — Jet Shand-Pease";
+      document.getElementById("ptitle").textContent = proj.title;
+      var ext = document.getElementById("pext");
+      ext.href = "view.html?p=" + encodeURIComponent(key);
+      document.getElementById("frame").src = proj.src;
+    } else {
+      document.title = "Project not found — Jet Shand-Pease";
+      document.getElementById("ptitle").textContent = "Project not found";
+      var f = document.getElementById("frame");
+      f.removeAttribute("src");
+      f.style.display = "none";
+      var d = document.createElement("div");
+      d.className = "missing";
+      d.innerHTML = "<h1>Project not found</h1><p>That project doesn’t exist. <a href=\"index.html\">Back to projects</a>.</p>";
+      document.body.appendChild(d);
+    }
+  </script>
+</body>
+</html>

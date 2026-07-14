@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>My Site – CV</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CV — Jet Shand-Pease</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -10,29 +11,25 @@
 <header class="site-header">
   <nav class="nav">
     <a href="index.html">Home</a>
-    <a href="cv.html">CV</a>
+    <a href="cv.html" class="active">CV</a>
     <a href="projects/index.html">Projects</a>
     <a href="blog/index.html">Blog</a>
   </nav>
 </header>
 
-
 <main>
-  <h1>Curriculum Vitae / Résumé </h1>
-
-  <!-- Responsive PDF embed -->
-  <object data="cv.pdf"
-          type="application/pdf"
-          width="100%"          <!-- fills the container -->
-          height="1800px">       <!-- tweak to taste -->
-    <!-- Fallback for browsers that block inline PDFs -->
-    <p>Your browser can’t display PDF files.  
-       <a href="cv.pdf">Download my CV instead.</a>
-    </p>
-  </object>
+  <div class="section-head">
+    <h1>Curriculum Vitae</h1>
+    <p>The latest version of my CV, below.</p>
+  </div>
+  <div class="cv-actions">
+    <a class="btn btn-ghost" href="ClaudeHTMLCV/Jet%20Shand-Pease%20CV.html" target="_blank" rel="noopener">Open in new window &#8599;</a>
+  </div>
+  <iframe class="cv-frame" style="height:1190px;background:#fff;"
+          src="ClaudeHTMLCV/Jet%20Shand-Pease%20CV.html"
+          title="Jet Shand-Pease CV"></iframe>
 </main>
 
-
-<footer>© 2025 Jet Shand-Pease</footer>
+<footer>© 2025 Jet Shand-Pease · <a href="https://shandpease.com">shandpease.com</a></footer>
 </body>
 </html>

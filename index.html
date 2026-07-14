@@ -1,30 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>All the Media You Have Consumed</title>
-<link rel="stylesheet" href="css/styles.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jet Shand-Pease</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="root"><div class="booting">Assembling the atlas&hellip;</div></div>
-<noscript>This atlas is built out of JavaScript. Enable it and reload.</noscript>
-<script src="js/core.js"></script>
-<script src="js/items/written.js"></script>
-<script src="js/items/screen.js"></script>
-<script src="js/items/sound.js"></script>
-<script src="js/items/art.js"></script>
-<script src="js/items/games.js"></script>
-<script src="js/items/stage.js"></script>
-<script src="js/items/sport.js"></script>
-<script src="js/items/history.js"></script>
-<script src="js/items/spectacle.js"></script>
-<script src="js/items/internet.js"></script>
-<script src="js/engine.js"></script>
-<script src="data/deep/index.js"></script>
-<script src="js/deep.js"></script>
-<script src="js/state.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/main.js"></script>
+
+<header class="site-header">
+  <nav class="nav">
+    <a href="index.html" class="active">Home</a>
+    <a href="cv.html">CV</a>
+    <a href="projects/index.html">Projects</a>
+    <a href="blog/index.html">Blog</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <h1>Jet Shand-Pease</h1>
+  <p class="tagline">Mathematics graduate · builder of simulations, tools and proofs</p>
+  <p>
+    I build things that turn hard ideas into something you can see and play with —
+    from emergent-life simulations and a universe-scale animation to an atlas of
+    every kind of media, and the occasional mathematical proof. Have a look around.
+  </p>
+  <div class="cta-row">
+    <a href="projects/index.html" class="btn btn-primary btn-lg">Explore projects</a>
+    <a href="cv.html" class="btn btn-ghost btn-lg">Read my CV</a>
+  </div>
+</section>
+
+<main>
+  <div class="section-head">
+    <h2>Selected projects</h2>
+    <p>A few things I've been working on. Full catalogue on the projects page.</p>
+  </div>
+  <div class="grid">
+
+    <div class="card">
+      <div class="tag">Simulation · JS</div>
+      <h3>Primordial Particle System</h3>
+      <p>A real-time simulation in which very simple local rules give rise to lifelike, self-organising structures.</p>
+      <div class="card-actions">
+        <a class="btn btn-primary" href="projects/view.html?p=pps">Open</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tag">Data · JS</div>
+      <h3>All Media Consumption Tracker</h3>
+      <p>An interactive atlas cataloguing hundreds of thousands of works across every medium — screen, sound, page and beyond.</p>
+      <div class="card-actions">
+        <a class="btn btn-primary" href="projects/view.html?p=atlas">Open</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tag">Mathematics · Python</div>
+      <h3>Stirling Numbers of the First Kind</h3>
+      <p>An explicit polygamma formula for the Stirling numbers, plus an elementary impossibility proof — all computationally verified.</p>
+      <div class="card-actions">
+        <a class="btn btn-primary" href="projects/view.html?p=stirling">Open</a>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>© 2025 Jet Shand-Pease · <a href="https://shandpease.com">shandpease.com</a></footer>
 </body>
 </html>

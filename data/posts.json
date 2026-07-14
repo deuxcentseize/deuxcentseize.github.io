@@ -4,11 +4,5 @@
     "url": "blog/post1.html",
     "date": "2025-04-30",
     "type": "blog"
-  },
-  {
-    "title": "My first project",
-    "url": "projects/project1.html",
-    "date": "2025-04-30",
-    "type": "project"
   }
 ]
