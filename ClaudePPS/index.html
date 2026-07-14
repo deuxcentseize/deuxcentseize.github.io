@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Primordial Particle System — Lab</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- ===================== Viewport ===================== -->
+    <div id="stage">
+      <canvas id="view"></canvas>
+
+      <div id="hud">
+        <div class="hud-row"><span class="k">fps</span><span id="stat-fps" class="v">–</span></div>
+        <div class="hud-row"><span class="k">steps/s</span><span id="stat-sps" class="v">–</span></div>
+        <div class="hud-row"><span class="k">step</span><span id="stat-step" class="v">0</span></div>
+        <div class="hud-row"><span class="k">particles</span><span id="stat-count" class="v">–</span></div>
+        <div class="hud-row"><span class="k">mean N</span><span id="stat-meanN" class="v">–</span></div>
+        <div class="hud-row"><span class="k">clusters</span><span id="stat-clusters" class="v">–</span></div>
+        <div class="hud-row"><span class="k">tracked</span><span id="stat-tracked" class="v">0</span></div>
+      </div>
+
+      <div id="viewport-help">
+        drag&nbsp;to&nbsp;pan · scroll&nbsp;to&nbsp;zoom · click&nbsp;a&nbsp;particle&nbsp;to&nbsp;track ·
+        <b>space</b>&nbsp;play/pause · <b>s</b>&nbsp;step · <b>r</b>&nbsp;reset · <b>f</b>&nbsp;fit
+      </div>
+
+      <div id="playback-badge" class="hidden">PLAYBACK</div>
+    </div>
+
+    <!-- ===================== Controls ===================== -->
+    <aside id="sidebar">
+      <header id="brand">
+        <h1>Primordial Particle System</h1>
+        <p class="sub">Schmickl · Stefanec · Crailsheim — Artificial Life Lab, Graz · <a href="gpu.html" style="color:var(--accent-2)">GPU / WebGPU version →</a></p>
+      </header>
+
+      <div id="transport">
+        <button id="btn-play" class="primary">▶ Play</button>
+        <button id="btn-step">Step</button>
+        <button id="btn-reset">Reset</button>
+        <label class="inline">
+          <span>steps / frame</span>
+          <input id="spf" type="number" min="1" max="200" value="1" />
+        </label>
+      </div>
+
+      <details open>
+        <summary>Parameters</summary>
+        <div id="params-container"></div>
+        <p class="note" id="param-note"></p>
+      </details>
+
+      <details open>
+        <summary>Presets — interesting conditions</summary>
+        <div class="row">
+          <select id="preset-select"></select>
+          <button id="btn-apply-preset">Load</button>
+        </div>
+        <p class="note" id="preset-notes"></p>
+      </details>
+
+      <details open>
+        <summary>Colour &amp; tracking</summary>
+        <label class="inline">
+          <span>colour by</span>
+          <select id="color-mode">
+            <option value="classic">Classic (neighbour count N)</option>
+            <option value="density">Density colormap (N)</option>
+            <option value="heading">Heading (direction)</option>
+            <option value="turn">Turning bias (|R−L|)</option>
+            <option value="custom">Custom expression</option>
+          </select>
+        </label>
+
+        <div id="classic-thresholds" class="subpanel">
+          <div class="mini-legend">
+            <span class="sw" data-cls="low"></span>N ≤ <input id="th-t1" type="number" value="13" />
+            <span class="sw" data-cls="mid"></span>≤ <input id="th-t2" type="number" value="15" />
+            <span class="sw" data-cls="high"></span>≤ <input id="th-t3" type="number" value="35" />
+            <span class="sw" data-cls="top"></span>more
+          </div>
+        </div>
+
+        <div id="scalar-max" class="subpanel hidden">
+          <label class="inline"><span>colormap max</span>
+            <input id="scalar-max-input" type="number" value="50" /></label>
+        </div>
+
+        <div id="custom-panel" class="subpanel hidden">
+          <label class="stacked"><span>expression → scalar (vars: N, dN, net, angle, x, y, id, age)</span>
+            <input id="custom-expr" type="text" value="N" /></label>
+          <p class="error" id="custom-error"></p>
+        </div>
+
+        <div class="subpanel">
+          <div class="row spread">
+            <strong>Highlight rules (novel situations)</strong>
+          </div>
+          <div id="rules-container"></div>
+          <div class="row add-rule">
+            <select id="new-rule-type">
+              <option value="expr">custom expression</option>
+              <option value="birth">cell birth (dN↑)</option>
+              <option value="death">cell death (dN↓)</option>
+              <option value="nucleus">dense nucleus (N≥)</option>
+              <option value="lonely">lonely (N≤)</option>
+              <option value="spinner">spinner (|net|≥)</option>
+              <option value="rare">rare density</option>
+            </select>
+            <button id="btn-add-rule">+ add</button>
+          </div>
+        </div>
+
+        <label class="inline"><span>dot size</span>
+          <input id="dot-size" type="range" min="1" max="6" step="1" value="2" />
+          <span id="dot-size-val" class="val">2</span>
+        </label>
+        <div class="row spread">
+          <label class="inline compact"><input id="trails-toggle" type="checkbox" /><span>trails</span></label>
+          <button id="btn-clear-tracked">clear tracked</button>
+        </div>
+      </details>
+
+      <details>
+        <summary>Record a run (compressed)</summary>
+        <div class="row">
+          <label class="inline"><span>every</span><input id="rec-everyN" type="number" min="1" value="4" /><span>steps</span></label>
+        </div>
+        <label class="inline"><span>precision</span>
+          <select id="rec-quant">
+            <option value="16">16-bit (4 B/particle)</option>
+            <option value="12" selected>12-bit (3 B/particle)</option>
+            <option value="8">8-bit (2 B/particle)</option>
+          </select>
+        </label>
+        <div class="row">
+          <button id="btn-rec-start" class="primary">● Record</button>
+          <button id="btn-rec-stop" disabled>■ Stop</button>
+        </div>
+        <p class="note" id="rec-info">Not recording.</p>
+        <div class="row">
+          <button id="btn-rec-export" disabled>Export .pps</button>
+          <label class="filebtn">Load .pps<input id="rec-file" type="file" accept=".pps,.bin" hidden /></label>
+        </div>
+
+        <div id="playback-panel" class="subpanel hidden">
+          <div class="row">
+            <button id="btn-pb-play">▶</button>
+            <input id="pb-slider" type="range" min="0" max="0" value="0" />
+            <button id="btn-exit-playback">✕ exit</button>
+          </div>
+          <p class="note" id="pb-info"></p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Batch — consecutive simulations</summary>
+        <label class="inline"><span>vary</span>
+          <select id="batch-mode">
+            <option value="param">a parameter</option>
+            <option value="seed">the seed</option>
+          </select>
+        </label>
+        <div id="batch-param-row">
+          <label class="inline"><span>parameter</span>
+            <select id="batch-param">
+              <option value="beta">beta</option>
+              <option value="alpha">alpha</option>
+              <option value="v">v (speed)</option>
+              <option value="r">r (radius)</option>
+              <option value="density">density</option>
+            </select>
+          </label>
+          <div class="row">
+            <label class="inline compact"><span>from</span><input id="batch-from" type="number" value="8" /></label>
+            <label class="inline compact"><span>to</span><input id="batch-to" type="number" value="26" /></label>
+          </div>
+        </div>
+        <div id="batch-seed-row" class="hidden">
+          <label class="inline"><span>seeds</span><input id="batch-seeds" type="text" value="1,2,3,4,5,6" /></label>
+        </div>
+        <div class="row">
+          <label class="inline compact"><span>runs</span><input id="batch-count" type="number" min="2" value="8" /></label>
+          <label class="inline compact"><span>steps</span><input id="batch-steps" type="number" min="10" value="600" /></label>
+        </div>
+        <label class="inline compact"><input id="batch-record" type="checkbox" /><span>record each run</span></label>
+        <div class="row">
+          <button id="btn-batch-run" class="primary">Run batch</button>
+          <button id="btn-batch-cancel" disabled>Cancel</button>
+          <button id="btn-batch-sort">Sort by novelty</button>
+        </div>
+        <div id="batch-progress" class="note"></div>
+        <div id="batch-results" class="gallery"></div>
+      </details>
+
+      <details>
+        <summary>Experiments — save &amp; share</summary>
+        <div class="row">
+          <input id="exp-name" type="text" placeholder="name this condition…" />
+          <button id="btn-exp-save" class="primary">Save current</button>
+        </div>
+        <div id="exp-list"></div>
+        <div class="row">
+          <button id="btn-exp-export">Export JSON</button>
+          <label class="filebtn">Import JSON<input id="exp-import-file" type="file" accept=".json" hidden /></label>
+        </div>
+      </details>
+
+      <footer id="foot">
+        Client-side · deterministic · <span id="foot-bpp"></span>
+      </footer>
+    </aside>
+  </div>
+
+  <script src="js/rng.js"></script>
+  <script src="js/simulation.js"></script>
+  <script src="js/coloring.js"></script>
+  <script src="js/renderer.js"></script>
+  <script src="js/recorder.js"></script>
+  <script src="js/presets.js"></script>
+  <script src="js/batch.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/ui.js"></script>
+</body>
+</html>

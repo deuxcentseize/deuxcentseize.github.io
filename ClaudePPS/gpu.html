@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Primordial Particle System — GPU (WebGPU)</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    #gpu-error {
+      position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+      background: #05070c; z-index: 50; padding: 40px; text-align: center;
+    }
+    #gpu-error .box { max-width: 520px; }
+    #gpu-error h2 { color: var(--danger); }
+    #gpu-error a { color: var(--accent); }
+    .throughput { background: #0e1a16; border: 1px solid #1e3a30; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
+    .throughput .big { font-size: 22px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+    .throughput .cmp { color: var(--muted); font-size: 11px; }
+    .badge-gpu { position: absolute; top: 12px; right: 12px; background: #16233a; border: 1px solid var(--line);
+      color: var(--accent-2); padding: 4px 9px; border-radius: 6px; font-size: 11px; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="stage">
+      <canvas id="view"></canvas>
+      <div id="hud">
+        <div class="hud-row"><span class="k">fps</span><span id="stat-fps" class="v">–</span></div>
+        <div class="hud-row"><span class="k">steps/s</span><span id="stat-sps" class="v">–</span></div>
+        <div class="hud-row"><span class="k">particle·steps/s</span><span id="stat-pps" class="v">–</span></div>
+        <div class="hud-row"><span class="k">step</span><span id="stat-step" class="v">0</span></div>
+        <div class="hud-row"><span class="k">particles</span><span id="stat-count" class="v">–</span></div>
+        <div class="hud-row"><span class="k">tracked</span><span id="stat-tracked" class="v">0</span></div>
+      </div>
+      <div id="viewport-help">
+        drag pan · scroll zoom · click to track · <b>space</b> play · <b>s</b> step · <b>r</b> reset · <b>f</b> fit
+      </div>
+      <div id="gpu-badge" class="badge-gpu"></div>
+      <div id="playback-badge" class="hidden" style="position:absolute;top:44px;right:12px;background:var(--accent-2);color:#04121f;font-weight:700;padding:4px 10px;border-radius:6px;">PLAYBACK</div>
+
+      <div id="gpu-error">
+        <div class="box">
+          <h2>WebGPU not available</h2>
+          <p id="gpu-error-msg" class="note"></p>
+          <p>This GPU build needs a WebGPU-capable browser (recent Chrome / Edge, or Chrome Canary on some platforms).</p>
+          <p>You can still use the <a href="index.html">CPU version →</a></p>
+        </div>
+      </div>
+    </div>
+
+    <aside id="sidebar">
+      <header id="brand">
+        <h1>PPS — GPU / WebGPU</h1>
+        <p class="sub">GPU-resident compute · massive particle counts · <a href="index.html" style="color:var(--accent-2)">CPU version →</a></p>
+      </header>
+
+      <div id="transport">
+        <button id="btn-play" class="primary">⏸ Pause</button>
+        <button id="btn-step">Step</button>
+        <button id="btn-reset">Reset</button>
+      </div>
+
+      <div class="throughput">
+        <div class="big" id="tp-big">–</div>
+        <div class="cmp" id="tp-cmp">throughput (particle-steps / second)</div>
+      </div>
+
+      <details open>
+        <summary>Speed — substeps &amp; hiding</summary>
+        <div class="param">
+          <div class="label"><span class="name">substeps / frame</span><span class="val" id="substeps-val">8</span></div>
+          <input id="substeps" type="range" min="1" max="4000" step="1" value="8" />
+          <p class="note">Simulation steps the GPU runs per animation frame (the main speed lever).</p>
+        </div>
+        <div class="param">
+          <div class="label"><span class="name">render every</span><span class="val" id="rendevery-val">1</span></div>
+          <input id="rendevery" type="range" min="1" max="120" step="1" value="1" />
+          <p class="note">Draw only every Nth frame — hide frames to spend all time simulating.</p>
+        </div>
+        <div class="param">
+          <div class="label"><span class="name">display 1 / N particles</span><span class="val" id="stride-val">1</span></div>
+          <input id="stride" type="range" min="1" max="64" step="1" value="1" />
+          <p class="note">Subsample which particles are drawn — the full set still simulates.</p>
+        </div>
+        <label class="inline compact"><input id="turbo" type="checkbox" /><span>Turbo (max compute, minimal drawing)</span></label>
+        <div class="row">
+          <button id="btn-bench">Benchmark this GPU</button>
+        </div>
+        <div id="bench-out" class="note"></div>
+      </details>
+
+      <details open>
+        <summary>Parameters</summary>
+        <div id="params-container"></div>
+        <p class="note">count / density / r / seed rebuild the world; α / β / v update live.</p>
+      </details>
+
+      <details open>
+        <summary>Presets</summary>
+        <div class="row">
+          <select id="preset-select"></select>
+          <button id="btn-apply-preset">Load</button>
+        </div>
+        <p class="note" id="preset-notes"></p>
+      </details>
+
+      <details open>
+        <summary>Colour &amp; tracking</summary>
+        <label class="inline"><span>colour by</span>
+          <select id="color-mode">
+            <option value="0">Classic (neighbour count N)</option>
+            <option value="1">Density colormap (N)</option>
+            <option value="2">Heading (direction)</option>
+            <option value="3">Turning bias (|R−L|)</option>
+          </select>
+        </label>
+        <div id="classic-thresholds" class="subpanel">
+          <div class="mini-legend">
+            <span class="sw" data-cls="low"></span>N ≤ <input id="th-t1" type="number" value="13" />
+            <span class="sw" data-cls="mid"></span>≤ <input id="th-t2" type="number" value="15" />
+            <span class="sw" data-cls="high"></span>≤ <input id="th-t3" type="number" value="35" />
+            <span class="sw" data-cls="top"></span>more
+          </div>
+        </div>
+        <div class="subpanel">
+          <strong>Highlight rules (novel situations)</strong>
+          <div id="hl-container"></div>
+        </div>
+        <div class="row spread">
+          <span class="note">click a particle to track</span>
+          <button id="btn-clear-tracked">clear tracked</button>
+        </div>
+      </details>
+
+      <details>
+        <summary>Record a run (compressed)</summary>
+        <div class="row">
+          <label class="inline"><span>every</span><input id="rec-everyN" type="number" min="1" value="4" /><span>steps</span></label>
+        </div>
+        <label class="inline"><span>precision</span>
+          <select id="rec-quant">
+            <option value="16">16-bit (4 B/particle)</option>
+            <option value="12" selected>12-bit (3 B/particle)</option>
+            <option value="8">8-bit (2 B/particle)</option>
+          </select>
+        </label>
+        <div class="row">
+          <button id="btn-rec-start" class="primary">● Record</button>
+          <button id="btn-rec-stop" disabled>■ Stop</button>
+        </div>
+        <p class="note" id="rec-info">Not recording.</p>
+        <div class="row">
+          <button id="btn-rec-export" disabled>Export .pps</button>
+          <label class="filebtn">Load .pps<input id="rec-file" type="file" accept=".pps,.bin" hidden /></label>
+        </div>
+        <div id="playback-panel" class="subpanel hidden">
+          <div class="row">
+            <button id="btn-pb-play">▶</button>
+            <input id="pb-slider" type="range" min="0" max="0" value="0" />
+            <button id="btn-exit-playback">✕ exit</button>
+          </div>
+          <label class="inline compact"><span>playback speed ×</span><input id="pb-speed" type="number" min="1" value="4" /></label>
+          <p class="note" id="pb-info"></p>
+        </div>
+      </details>
+
+      <footer id="foot">GPU · WebGPU compute · <span id="foot-bpp"></span></footer>
+    </aside>
+  </div>
+
+  <script src="js/rng.js"></script>
+  <script src="js/recorder.js"></script>
+  <script src="js/presets.js"></script>
+  <script src="js/gpu/shaders.js"></script>
+  <script src="js/gpu/gpupps.js"></script>
+  <script src="js/gpu/gpuapp.js"></script>
+  <script src="js/gpu/gpuui.js"></script>
+</body>
+</html>
